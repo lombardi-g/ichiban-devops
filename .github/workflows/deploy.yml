@@ -65,7 +65,7 @@ jobs:
 
       - name: Build Angular app
         working-directory: frontend
-        run: npx ng build --configuration production
+        run: npx ng build --configuration production --base-href /ichiban-devops/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3.0.1
