@@ -1,0 +1,53 @@
+name: Build and Deploy Baseball Stats
+
+on:
+  push:
+    branches: [main]   # Run every time you push to main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Get the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Step 3: Install Python dependencies
+      - name: Install Python deps
+        run: pip install pandas
+
+      # Step 4: Run your stats script (validates the data)
+      - name: Run stats calculation
+        run: python calculate_stats.py
+
+      # Step 5: Set up Node.js for the frontend
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Step 6: Install frontend dependencies
+      - name: Install frontend deps
+        run: |
+          cd frontend
+          npm install
+
+      # Step 7: Build the frontend
+      - name: Build frontend
+        run: |
+          cd frontend
+          ng build
+
+      # Step 8: Deploy to GitHub Pages (free hosting!)
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend/dist

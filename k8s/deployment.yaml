@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: baseball-stats
+spec:
+  replicas: 2                    # Run 2 copies of the app
+  selector:
+    matchLabels:
+      app: baseball-stats
+  template:
+    metadata:
+      labels:
+        app: baseball-stats
+    spec:
+      containers:
+        - name: baseball-stats
+          image: baseball-stats:latest
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: baseball-stats-service
+spec:
+  selector:
+    app: baseball-stats
+  ports:
+    - port: 80
+      targetPort: 80
+  type: NodePort
