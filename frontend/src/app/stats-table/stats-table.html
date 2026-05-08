@@ -1,0 +1,152 @@
+<div class="wrapper">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo-block">
+        <img src="painted.png" alt="Ichiban logo" class="team-logo" />
+        <div class="title-block">
+          <span class="title-main">Batting Stats</span>
+          <span class="title-sub">Career Stats</span>
+        </div>
+      </div>
+
+      <div class="summary-cards">
+        <div class="card">
+          <span class="card-label">Team AVG</span>
+          <span class="card-value">{{ teamAvg() }}</span>
+        </div>
+        <div class="card">
+          <span class="card-label">Team OPS</span>
+          <span class="card-value">{{ teamOPS() }}</span>
+        </div>
+        <div class="card">
+          <span class="card-label">Team HR</span>
+          <span class="card-value">{{ totalHR() }}</span>
+        </div>
+        <div class="card">
+          <span class="card-label">Team SB</span>
+          <span class="card-value">{{ totalSB() }}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Loading state ──────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="status-overlay">
+      <span class="status-spinner"></span>
+      <span class="status-text">Loading stats...</span>
+    </div>
+  }
+
+  <!-- ── Error state ────────────────────────────────────────── -->
+  @if (error()) {
+    <div class="status-overlay error">
+      <span class="status-text">⚠ {{ error() }}</span>
+    </div>
+  }
+
+  <!-- ── Main content (only shown after data loads) ─────────── -->
+  @if (!loading() && !error()) {
+
+    <!-- ── Filters ──────────────────────────────────────────── -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label class="filter-label" for="search">Search</label>
+        <input
+          id="search"
+          class="filter-input"
+          type="text"
+          placeholder="Player name..."
+          [value]="searchTerm()"
+          (input)="searchTerm.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="minpa">Min PA</label>
+        <input
+          id="minpa"
+          class="filter-range"
+          type="range"
+          min="0"
+          max="40"
+          step="1"
+          [value]="minPA()"
+          (input)="minPA.set(+$any($event.target).value)"
+        />
+        <span class="filter-range-val">{{ minPA() }}</span>
+      </div>
+
+      <span class="filter-count">
+        {{ filteredPlayers().length }} player{{ filteredPlayers().length !== 1 ? 's' : '' }}
+        &nbsp;·&nbsp; click column to sort
+      </span>
+    </div>
+
+    <!-- ── Table ────────────────────────────────────────────── -->
+    <div class="table-scroll">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            @for (col of columns; track col.key) {
+              <th
+                [class.sticky-col]="col.key === 'name'"
+                [class.sorted]="sortKey() === col.key"
+                [title]="col.title"
+                (click)="onSort(col.key)"
+              >
+                <span class="th-inner">
+                  {{ col.label }}
+                  @if (sortKey() === col.key) {
+                    <span class="sort-arrow">{{ sortDir() === 'desc' ? '▼' : '▲' }}</span>
+                  }
+                </span>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (player of filteredPlayers(); track player.name; let i = $index) {
+            <tr [class.row-alt]="i % 2 !== 0">
+              @for (col of columns; track col.key) {
+                <td
+                  [class.sticky-col]="col.key === 'name'"
+                  [class.player-name]="col.key === 'name'"
+                  [ngClass]="col.isRate ? statColor(col.key, +player[col.key]) : ''"
+                >
+                  {{ formatValue(player, col.key) }}
+                </td>
+              }
+            </tr>
+          }
+
+          @if (filteredPlayers().length === 0) {
+            <tr>
+              <td [attr.colspan]="columns.length" class="empty-row">
+                No players match your filters
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Legend ───────────────────────────────────────────── -->
+    <footer class="legend">
+      <div class="legend-item">
+        <span class="legend-dot elite-dot"></span> Elite
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot average-dot"></span> Average
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot below-dot"></span> Below avg
+      </div>
+      <span class="legend-note">AVG · OBP · SLG · OPS are color-coded</span>
+    </footer>
+
+  }
+
+</div>

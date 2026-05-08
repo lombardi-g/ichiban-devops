@@ -1,9 +1,12 @@
+# ── Deployment ────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: baseball-stats
+  labels:
+    app: baseball-stats
 spec:
-  replicas: 2                    # Run 2 copies of the app
+  replicas: 2
   selector:
     matchLabels:
       app: baseball-stats
@@ -15,9 +18,21 @@ spec:
       containers:
         - name: baseball-stats
           image: baseball-stats:latest
+          # Never = use the locally-loaded image, don't try to pull from internet
+          # Required for minikube. Change to Always if you push to Docker Hub.
+          imagePullPolicy: Never
           ports:
             - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+
 ---
+# ── Service ───────────────────────────────────────────────────────────────
 apiVersion: v1
 kind: Service
 metadata:
@@ -26,6 +41,8 @@ spec:
   selector:
     app: baseball-stats
   ports:
-    - port: 80
+    - protocol: TCP
+      port: 80
       targetPort: 80
+      nodePort: 30080      # access via: minikube ip → open that IP:30080
   type: NodePort

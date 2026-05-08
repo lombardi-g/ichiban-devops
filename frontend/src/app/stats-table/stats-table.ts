@@ -1,0 +1,249 @@
+import { Component, computed, signal, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+export interface Player {
+  name: string;
+  pa: number;
+  ab: number;
+  h: number;
+  singles: number;
+  doubles: number;
+  triples: number;
+  hr: number;
+  rbi: number;
+  r: number;
+  k: number;
+  sb: number;
+  avg: number;
+  obp: number;
+  slg: number;
+  ops: number;
+}
+
+export type SortKey = keyof Player;
+export type SortDir = 'asc' | 'desc';
+
+// Raw row shape coming from the CSV
+interface AppearanceRow {
+  Name: string;
+  Appearance: string;
+  RBI: number;
+  Run: number;
+  SB: number;
+  SBA: number;
+}
+
+// ── Stat calculation (mirrors calculate_stats.py logic) ──────────────────────
+
+const COUNT_TOWARDS_AB  = new Set(['1b', '2b', '3b', 'HR', 'K', 'ROE', 'RFC', 'GO', 'FO']);
+const COUNT_AS_HIT      = new Set(['1b', '2b', '3b', 'HR']);
+const COUNT_ON_BASE     = new Set(['1b', '2b', '3b', 'HR', 'BB', 'HBP']);
+
+function calculateStats(rows: AppearanceRow[]): Player[] {
+  // Group rows by player name
+  const byPlayer = new Map<string, AppearanceRow[]>();
+  for (const row of rows) {
+    const existing = byPlayer.get(row.Name) ?? [];
+    existing.push(row);
+    byPlayer.set(row.Name, existing);
+  }
+
+  const players: Player[] = [];
+
+  for (const [name, appearances] of byPlayer) {
+    const pa      = appearances.length;
+    const ab      = appearances.filter(r => COUNT_TOWARDS_AB.has(r.Appearance)).length;
+    const h       = appearances.filter(r => COUNT_AS_HIT.has(r.Appearance)).length;
+    const onBase  = appearances.filter(r => COUNT_ON_BASE.has(r.Appearance)).length;
+    const singles = appearances.filter(r => r.Appearance === '1b').length;
+    const doubles = appearances.filter(r => r.Appearance === '2b').length;
+    const triples = appearances.filter(r => r.Appearance === '3b').length;
+    const hr      = appearances.filter(r => r.Appearance === 'HR').length;
+    const rbi     = appearances.reduce((s, r) => s + (Number(r.RBI)  || 0), 0);
+    const r       = appearances.reduce((s, r) => s + (Number(r.Run)  || 0), 0);
+    const k       = appearances.filter(row => row.Appearance === 'K').length;
+    const sb      = appearances.reduce((s, r) => s + (Number(r.SB)   || 0), 0);
+
+    // Skip players with fewer than 5 at-bats (too small a sample)
+    if (ab < 5) continue;
+
+    const totalBases = singles * 1 + doubles * 2 + triples * 3 + hr * 4;
+    const avg = ab > 0 ? round3(h / ab)          : 0;
+    const obp = pa > 0 ? round3(onBase / pa)      : 0;
+    const slg = ab > 0 ? round3(totalBases / ab)  : 0;
+    const ops = round3(obp + slg);
+
+    players.push({ name, pa, ab, h, singles, doubles, triples, hr, rbi, r, k, sb, avg, obp, slg, ops });
+  }
+
+  return players;
+}
+
+function round3(n: number): number {
+  return Math.round(n * 1000) / 1000;
+}
+
+// ── CSV parser (no external library needed) ──────────────────────────────────
+
+function parseCsv(text: string): AppearanceRow[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(';').map(h => h.trim());
+  const rows: AppearanceRow[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(';');
+    const obj: Record<string, string> = {};
+    headers.forEach((h, idx) => { obj[h] = (values[idx] ?? '').trim(); });
+
+    rows.push({
+      Name:       obj['Name'],
+      Appearance: obj['Appearance'],
+      RBI:        Number(obj['RBI'])  || 0,
+      Run:        Number(obj['Run'])  || 0,
+      SB:         Number(obj['SB'])   || 0,
+      SBA:        Number(obj['SBA'])  || 0,
+    });
+  }
+
+  return rows;
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
+
+@Component({
+  selector: 'app-stats-table',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './stats-table.html',
+  styleUrl: './stats-table.css',
+})
+export class StatsTable implements OnInit {
+
+  private http = inject(HttpClient);
+
+  // ── State ────────────────────────────────────────────────────────────────
+
+  readonly loading  = signal(true);
+  readonly error    = signal<string | null>(null);
+  private  allPlayers = signal<Player[]>([]);
+
+  searchTerm = signal('');
+  minPA      = signal(0);
+  sortKey    = signal<SortKey>('ops');
+  sortDir    = signal<SortDir>('desc');
+
+  // ── Column definitions ───────────────────────────────────────────────────
+
+  readonly columns = [
+    { key: 'name'    as const, label: 'Player', title: 'Player name',           isRate: false },
+    { key: 'pa'      as const, label: 'PA',     title: 'Plate Appearances',      isRate: false },
+    { key: 'ab'      as const, label: 'AB',     title: 'At Bats',                isRate: false },
+    { key: 'h'       as const, label: 'H',      title: 'Hits',                   isRate: false },
+    { key: 'singles' as const, label: '1B',     title: 'Singles',                isRate: false },
+    { key: 'doubles' as const, label: '2B',     title: 'Doubles',                isRate: false },
+    { key: 'triples' as const, label: '3B',     title: 'Triples',                isRate: false },
+    { key: 'hr'      as const, label: 'HR',     title: 'Home Runs',              isRate: false },
+    { key: 'rbi'     as const, label: 'RBI',    title: 'Runs Batted In',         isRate: false },
+    { key: 'r'       as const, label: 'R',      title: 'Runs Scored',            isRate: false },
+    { key: 'k'       as const, label: 'K',      title: 'Strikeouts',             isRate: false },
+    { key: 'sb'      as const, label: 'SB',     title: 'Stolen Bases',           isRate: false },
+    { key: 'avg'     as const, label: 'AVG',    title: 'Batting Average',        isRate: true  },
+    { key: 'obp'     as const, label: 'OBP',    title: 'On-Base Percentage',     isRate: true  },
+    { key: 'slg'     as const, label: 'SLG',    title: 'Slugging Percentage',    isRate: true  },
+    { key: 'ops'     as const, label: 'OPS',    title: 'On-Base Plus Slugging',  isRate: true  },
+  ] as const;
+
+  // ── Derived / computed ───────────────────────────────────────────────────
+
+  readonly filteredPlayers = computed(() => {
+    const term  = this.searchTerm().toLowerCase();
+    const minpa = this.minPA();
+    const key   = this.sortKey();
+    const dir   = this.sortDir();
+
+    return [...this.allPlayers()]
+      .filter(p => p.name.toLowerCase().includes(term) && p.pa >= minpa)
+      .sort((a, b) => {
+        const av = a[key];
+        const bv = b[key];
+        const cmp = typeof av === 'string'
+          ? (av as string).localeCompare(bv as string)
+          : (av as number) - (bv as number);
+        return dir === 'asc' ? cmp : -cmp;
+      });
+  });
+
+  readonly teamAvg = computed(() => {
+    const ps = this.allPlayers().filter(p => p.avg > 0);
+    if (!ps.length) return '---';
+    return (ps.reduce((s, p) => s + p.avg, 0) / ps.length).toFixed(3);
+  });
+
+  readonly teamOPS = computed(() => {
+    const ps = this.allPlayers();
+    if (!ps.length) return '---';
+    return (ps.reduce((s, p) => s + p.ops, 0) / ps.length).toFixed(3);
+  });
+
+  readonly totalHR = computed(() => this.allPlayers().reduce((s, p) => s + p.hr, 0));
+  readonly totalSB = computed(() => this.allPlayers().reduce((s, p) => s + p.sb, 0));
+
+  // ── Lifecycle ────────────────────────────────────────────────────────────
+
+  ngOnInit(): void {
+    // appearances.csv must be placed in the /public folder
+    this.http.get('appearances.csv', { responseType: 'text' }).subscribe({
+      next: (text) => {
+        const rows    = parseCsv(text);
+        const players = calculateStats(rows);
+        this.allPlayers.set(players);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.error.set('Could not load appearances.csv. Make sure it is in the /public folder.');
+        this.loading.set(false);
+        console.error(err);
+      },
+    });
+  }
+
+  // ── Methods ──────────────────────────────────────────────────────────────
+
+  onSort(key: SortKey): void {
+    if (this.sortKey() === key) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortKey.set(key);
+      this.sortDir.set('desc');
+    }
+  }
+
+  formatValue(player: Player, key: SortKey): string {
+    const val = player[key];
+    if (typeof val === 'number') {
+      if (['avg', 'obp', 'slg', 'ops'].includes(key)) return val.toFixed(3);
+      return val.toString();
+    }
+    return val as string;
+  }
+
+  statColor(key: SortKey, value: number): string {
+    const thresholds: Partial<Record<SortKey, { great: number; good: number }>> = {
+      avg: { great: 0.500, good: 0.350 },
+      obp: { great: 0.600, good: 0.450 },
+      slg: { great: 0.800, good: 0.550 },
+      ops: { great: 1.200, good: 0.900 },
+    };
+    const t = thresholds[key];
+    if (!t) return '';
+    if (value >= t.great) return 'elite';
+    if (value >= t.good)  return 'average';
+    return 'below';
+  }
+}
