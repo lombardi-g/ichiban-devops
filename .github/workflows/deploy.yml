@@ -4,27 +4,31 @@ on:
   push:
     branches: [main]
 
+# Force all actions to run on Node 24 — fixes the Node 20 deprecation warning
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 # Required permissions for the official GitHub Pages deploy action
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Only allow one deployment at a time; don't cancel in-progress runs
+# Only allow one deployment at a time
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
 
-  # ── Job 1: Validate Python data ────────────────────────────────────────────
+  # ── Job 1: Validate Python data ───────────────────────────────────────────
   validate-stats:
     name: Validate stats data
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.2.2        # v4.2.2+ runs on Node 24
+        uses: actions/checkout@v4.2.2
 
       - name: Set up Python
         uses: actions/setup-python@v5.6.0
@@ -35,10 +39,10 @@ jobs:
         run: pip install pandas
 
       - name: Run stats validation
-        # calculate_stats.py is at the repo root, next to the frontend/ folder
+        # Script runs from the repo root — appearances.csv must be here too
         run: python calculate_stats.py
 
-  # ── Job 2: Build Angular frontend ─────────────────────────────────────────
+  # ── Job 2: Build Angular frontend ────────────────────────────────────────
   build:
     name: Build Angular app
     runs-on: ubuntu-latest
@@ -61,17 +65,15 @@ jobs:
 
       - name: Build Angular app
         working-directory: frontend
-        # npx ensures the locally-installed ng CLI is used — no global install needed
         run: npx ng build --configuration production
 
-      # Upload the build output as a Pages artifact (avoids Jekyll entirely)
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3.0.1
         with:
-          # Angular 21 with outputPath "docs" puts browser files here:
+          # angular.json outputPath is "docs" → Angular writes to frontend/docs/browser/
           path: frontend/docs/browser
 
-  # ── Job 3: Deploy to GitHub Pages ─────────────────────────────────────────
+  # ── Job 3: Deploy to GitHub Pages ────────────────────────────────────────
   deploy:
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
