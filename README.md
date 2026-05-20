@@ -82,5 +82,4 @@ push to main
 - **Actions runs:** https://github.com/lombardi-g/ichiban-devops/actions
 - **Kubernetes basics:** https://kubernetes.io/docs/tutorials/kubernetes-basics/
 - **GitHub Actions docs:** https://docs.github.com/en/actions
-- **Apollo GraphQL tutorials:** https://www.apollographql.com/tutorials/
 - **DevOps roadmap:** https://roadmap.sh/devops
