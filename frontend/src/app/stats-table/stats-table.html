@@ -52,6 +52,8 @@
 
     <!-- ── Filters ──────────────────────────────────────────── -->
     <div class="filter-bar">
+
+      <!-- Search -->
       <div class="filter-group">
         <label class="filter-label" for="search">Search</label>
         <input
@@ -64,6 +66,7 @@
         />
       </div>
 
+      <!-- Min PA -->
       <div class="filter-group">
         <label class="filter-label" for="minpa">Min PA</label>
         <input
@@ -79,10 +82,44 @@
         <span class="filter-range-val">{{ minPA() }}</span>
       </div>
 
+      <!-- RISP toggle -->
+      <div class="filter-group">
+        <span class="filter-label">RISP</span>
+        <button
+          class="risp-toggle"
+          [class.risp-active]="rispOnly()"
+          (click)="toggleRisp()"
+          title="Show only plate appearances with runners in scoring position"
+        >
+          <span class="risp-dot"></span>
+          {{ rispOnly() ? 'ON' : 'OFF' }}
+        </button>
+      </div>
+
       <span class="filter-count">
         {{ filteredPlayers().length }} player{{ filteredPlayers().length !== 1 ? 's' : '' }}
         &nbsp;·&nbsp; click column to sort
       </span>
+    </div>
+
+    <!-- ── Championship filter ──────────────────────────────── -->
+    <div class="championship-bar">
+      <span class="filter-label">Championship</span>
+      <div class="champ-chips">
+        @for (league of allLeagues(); track league) {
+          <button
+            class="champ-chip"
+            [class.champ-chip-active]="isLeagueSelected(league)"
+            (click)="toggleLeague(league)"
+          >
+            <span class="champ-check">{{ isLeagueSelected(league) ? '✓' : '' }}</span>
+            {{ league }}
+          </button>
+        }
+        @if (selectedLeagues().size > 0) {
+          <button class="champ-clear" (click)="clearLeagues()">✕ Clear</button>
+        }
+      </div>
     </div>
 
     <!-- ── Table ────────────────────────────────────────────── -->
@@ -134,7 +171,7 @@
     </div>
 
     <!-- ── Legend ───────────────────────────────────────────── -->
-    <footer class="legend">
+    <div class="legend">
       <div class="legend-item">
         <span class="legend-dot elite-dot"></span> Elite
       </div>
@@ -144,9 +181,22 @@
       <div class="legend-item">
         <span class="legend-dot below-dot"></span> Below avg
       </div>
-      <span class="legend-note">AVG · OBP · SLG · OPS are color-coded</span>
-    </footer>
+      <span class="legend-note">AVG · OBP · SLG · OPS · K% are color-coded &nbsp;(K%: lower = better)</span>
+    </div>
 
   }
+
+  <!-- ── Site footer ──────────────────────────────────────── -->
+  <footer class="site-footer">
+    <a
+      href="https://github.com/lombardi-g"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="github-link"
+      title="lombardi-g on GitHub"
+    >
+      <img src="github.png" alt="GitHub" class="github-icon" />
+    </a>
+  </footer>
 
 </div>

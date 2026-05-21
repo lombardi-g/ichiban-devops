@@ -59,7 +59,6 @@
   width: 64px;
   height: 64px;
   object-fit: contain;
-  /* painted logo on dark background — no extra frame needed */
 }
 
 .title-block {
@@ -136,6 +135,7 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   white-space: nowrap;
+  font-family: var(--font-mono);
 }
 
 .filter-input {
@@ -170,6 +170,120 @@
   margin-left: auto;
   font-size: 11px;
   color: var(--text-faint);
+}
+
+/* ── RISP toggle ───────────────────────────────────────────── */
+.risp-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--burgundy-900);
+  border: 1px solid var(--border-mid);
+  border-radius: 20px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  padding: 5px 14px 5px 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.risp-toggle:hover {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+.risp-toggle.risp-active {
+  background: rgba(248 197 67 / 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.risp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.risp-active .risp-dot {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+/* ── Championship filter bar ───────────────────────────────── */
+.championship-bar {
+  background: var(--burgundy-800);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.champ-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.champ-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--burgundy-900);
+  border: 1px solid var(--border-mid);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.champ-chip:hover {
+  border-color: var(--accent-dim);
+  color: var(--text-primary);
+}
+
+.champ-chip.champ-chip-active {
+  background: rgba(248 197 67 / 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.champ-check {
+  display: inline-block;
+  width: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.champ-clear {
+  background: transparent;
+  border: 1px solid var(--burgundy-600);
+  border-radius: 6px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 5px 10px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.champ-clear:hover {
+  border-color: var(--below);
+  color: var(--below);
 }
 
 /* ── Table scroll wrapper ──────────────────────────────────── */
@@ -334,9 +448,42 @@ td.below   { color: var(--below)   !important; }
   color: var(--text-faint);
 }
 
+/* ── Site footer ───────────────────────────────────────────── */
+.site-footer {
+  background: var(--burgundy-800);
+  border-top: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.35;
+  border-radius: 50%;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.github-link:hover {
+  opacity: 0.8;
+  transform: scale(1.1);
+}
+
+.github-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  /* invert to make the white Octocat visible on dark bg */
+  filter: invert(1);
+  display: block;
+}
+
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .summary-cards { grid-template-columns: repeat(2, 1fr); }
   .filter-count  { display: none; }
-  .site-header, .filter-bar, .legend { padding-left: 16px; padding-right: 16px; }
+  .site-header, .filter-bar, .championship-bar, .legend, .site-footer { padding-left: 16px; padding-right: 16px; }
 }

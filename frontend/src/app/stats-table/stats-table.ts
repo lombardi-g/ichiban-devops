@@ -16,6 +16,7 @@ interface Player {
   rbi: number;
   r: number;
   k: number;
+  kpct: number;
   sb: number;
   avg: number;
   obp: number;
@@ -30,9 +31,11 @@ type SortDir = 'asc' | 'desc';
 interface AppearanceRow {
   Name:       string;
   Appearance: string;
+  League:     string;
   RBI:        number;
   Run:        number;
   SB:         number;
+  RISP:       boolean;
 }
 
 // ── Stat calculation ──────────────────────────────────────────────────────────
@@ -68,12 +71,13 @@ function calculateStats(rows: AppearanceRow[]): Player[] {
     if (ab < 5) continue;
 
     const totalBases = singles + doubles * 2 + triples * 3 + hr * 4;
-    const avg = ab > 0 ? round3(h / ab)         : 0;
-    const obp = pa > 0 ? round3(onBase / pa)     : 0;
-    const slg = ab > 0 ? round3(totalBases / ab) : 0;
-    const ops = round3(obp + slg);
+    const avg   = ab > 0 ? round3(h / ab)         : 0;
+    const obp   = pa > 0 ? round3(onBase / pa)     : 0;
+    const slg   = ab > 0 ? round3(totalBases / ab) : 0;
+    const ops   = round3(obp + slg);
+    const kpct  = pa > 0 ? round3(k / pa)          : 0;
 
-    players.push({ name, pa, ab, h, singles, doubles, triples, hr, rbi, r, k, sb, avg, obp, slg, ops });
+    players.push({ name, pa, ab, h, singles, doubles, triples, hr, rbi, r, k, kpct, sb, avg, obp, slg, ops });
   }
 
   return players;
@@ -100,9 +104,11 @@ function parseCsv(text: string): AppearanceRow[] {
     rows.push({
       Name:       obj['Name'],
       Appearance: obj['Appearance'],
+      League:     obj['League'] ?? '',
       RBI:        Number(obj['RBI']) || 0,
       Run:        Number(obj['Run']) || 0,
       SB:         Number(obj['SB'])  || 0,
+      RISP:       obj['RISP']?.toLowerCase() === 'true',
     });
   }
 
@@ -122,36 +128,63 @@ export class StatsTable implements OnInit {
 
   private http = inject(HttpClient);
 
+  // ── Raw data ───────────────────────────────────────────────────────────────
+
+  private rawRows = signal<AppearanceRow[]>([]);
+
   // ── State ──────────────────────────────────────────────────────────────────
 
   readonly loading    = signal(true);
   readonly error      = signal<string | null>(null);
-  private allPlayers  = signal<Player[]>([]);
 
-  searchTerm = signal('');
-  minPA      = signal(0);
-  sortKey    = signal<SortKey>('ops');
-  sortDir    = signal<SortDir>('desc');
+  searchTerm         = signal('');
+  minPA              = signal(0);
+  sortKey            = signal<SortKey>('ops');
+  sortDir            = signal<SortDir>('desc');
+  rispOnly           = signal(false);
+  selectedLeagues    = signal<Set<string>>(new Set());
+
+  // ── Derived ────────────────────────────────────────────────────────────────
+
+  readonly allLeagues = computed(() => {
+    const leagues = new Set(this.rawRows().map(r => r.League).filter(Boolean));
+    return [...leagues].sort();
+  });
+
+  private filteredRows = computed(() => {
+    let rows = this.rawRows();
+    if (this.rispOnly()) {
+      rows = rows.filter(r => r.RISP);
+    }
+    const sel = this.selectedLeagues();
+    if (sel.size > 0) {
+      rows = rows.filter(r => sel.has(r.League));
+    }
+    return rows;
+  });
+
+  private allPlayers = computed(() => calculateStats(this.filteredRows()));
 
   // ── Columns ────────────────────────────────────────────────────────────────
 
   readonly columns = [
-    { key: 'name'    as const, label: 'Player', title: 'Player name',          isRate: false },
-    { key: 'pa'      as const, label: 'PA',     title: 'Plate Appearances',     isRate: false },
-    { key: 'ab'      as const, label: 'AB',     title: 'At Bats',               isRate: false },
-    { key: 'h'       as const, label: 'H',      title: 'Hits',                  isRate: false },
-    { key: 'singles' as const, label: '1B',     title: 'Singles',               isRate: false },
-    { key: 'doubles' as const, label: '2B',     title: 'Doubles',               isRate: false },
-    { key: 'triples' as const, label: '3B',     title: 'Triples',               isRate: false },
-    { key: 'hr'      as const, label: 'HR',     title: 'Home Runs',             isRate: false },
-    { key: 'rbi'     as const, label: 'RBI',    title: 'Runs Batted In',        isRate: false },
-    { key: 'r'       as const, label: 'R',      title: 'Runs Scored',           isRate: false },
-    { key: 'k'       as const, label: 'K',      title: 'Strikeouts',            isRate: false },
-    { key: 'sb'      as const, label: 'SB',     title: 'Stolen Bases',          isRate: false },
-    { key: 'avg'     as const, label: 'AVG',    title: 'Batting Average',       isRate: true  },
-    { key: 'obp'     as const, label: 'OBP',    title: 'On-Base Percentage',    isRate: true  },
-    { key: 'slg'     as const, label: 'SLG',    title: 'Slugging Percentage',   isRate: true  },
-    { key: 'ops'     as const, label: 'OPS',    title: 'On-Base Plus Slugging', isRate: true  },
+    { key: 'name'    as const, label: 'Player', title: 'Player name',              isRate: false },
+    { key: 'pa'      as const, label: 'PA',     title: 'Plate Appearances',         isRate: false },
+    { key: 'ab'      as const, label: 'AB',     title: 'At Bats',                   isRate: false },
+    { key: 'h'       as const, label: 'H',      title: 'Hits',                      isRate: false },
+    { key: 'singles' as const, label: '1B',     title: 'Singles',                   isRate: false },
+    { key: 'doubles' as const, label: '2B',     title: 'Doubles',                   isRate: false },
+    { key: 'triples' as const, label: '3B',     title: 'Triples',                   isRate: false },
+    { key: 'hr'      as const, label: 'HR',     title: 'Home Runs',                 isRate: false },
+    { key: 'rbi'     as const, label: 'RBI',    title: 'Runs Batted In',            isRate: false },
+    { key: 'r'       as const, label: 'R',      title: 'Runs Scored',               isRate: false },
+    { key: 'k'       as const, label: 'K',      title: 'Strikeouts',                isRate: false },
+    { key: 'kpct'    as const, label: 'K%',     title: 'Strikeout Rate (K/PA)',     isRate: true  },
+    { key: 'sb'      as const, label: 'SB',     title: 'Stolen Bases',              isRate: false },
+    { key: 'avg'     as const, label: 'AVG',    title: 'Batting Average',           isRate: true  },
+    { key: 'obp'     as const, label: 'OBP',    title: 'On-Base Percentage',        isRate: true  },
+    { key: 'slg'     as const, label: 'SLG',    title: 'Slugging Percentage',       isRate: true  },
+    { key: 'ops'     as const, label: 'OPS',    title: 'On-Base Plus Slugging',     isRate: true  },
   ] as const;
 
   // ── Computed ───────────────────────────────────────────────────────────────
@@ -192,7 +225,7 @@ export class StatsTable implements OnInit {
   ngOnInit(): void {
     this.http.get('appearances.csv', { responseType: 'text' }).subscribe({
       next: (text) => {
-        this.allPlayers.set(calculateStats(parseCsv(text)));
+        this.rawRows.set(parseCsv(text));
         this.loading.set(false);
       },
       error: (err) => {
@@ -214,23 +247,51 @@ export class StatsTable implements OnInit {
     }
   }
 
+  toggleRisp(): void {
+    this.rispOnly.set(!this.rispOnly());
+  }
+
+  toggleLeague(league: string): void {
+    const current = new Set(this.selectedLeagues());
+    if (current.has(league)) {
+      current.delete(league);
+    } else {
+      current.add(league);
+    }
+    this.selectedLeagues.set(current);
+  }
+
+  isLeagueSelected(league: string): boolean {
+    return this.selectedLeagues().has(league);
+  }
+
+  clearLeagues(): void {
+    this.selectedLeagues.set(new Set());
+  }
+
   formatValue(player: Player, key: SortKey): string {
     const val = player[key];
     if (typeof val === 'number') {
-      return ['avg', 'obp', 'slg', 'ops'].includes(key) ? val.toFixed(3) : val.toString();
+      return ['avg', 'obp', 'slg', 'ops', 'kpct'].includes(key)
+        ? val.toFixed(3)
+        : val.toString();
     }
     return val as string;
   }
 
   statColor(key: SortKey, value: number): string {
-    const thresholds: Partial<Record<SortKey, { great: number; good: number }>> = {
-      avg: { great: 0.500, good: 0.350 },
-      obp: { great: 0.600, good: 0.450 },
-      slg: { great: 0.800, good: 0.550 },
-      ops: { great: 1.200, good: 0.900 },
+    const thresholds: Partial<Record<SortKey, { great: number; good: number; invert?: boolean }>> = {
+      avg:  { great: 0.500, good: 0.350 },
+      obp:  { great: 0.600, good: 0.450 },
+      slg:  { great: 0.800, good: 0.550 },
+      ops:  { great: 1.200, good: 0.900 },
+      kpct: { great: 0.150, good: 0.250, invert: true }, // lower is better
     };
     const t = thresholds[key];
     if (!t) return '';
+    if (t.invert) {
+      return value <= t.great ? 'elite' : value <= t.good ? 'average' : 'below';
+    }
     return value >= t.great ? 'elite' : value >= t.good ? 'average' : 'below';
   }
 }
