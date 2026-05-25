@@ -1,4 +1,4 @@
-# ⚾ Ichiban Baseball Stats — DevOps Study Project
+# ⚾ Baseball Stats — DevOps Project
 
 ## What This Project Is
 
