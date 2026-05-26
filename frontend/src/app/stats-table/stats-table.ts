@@ -68,7 +68,7 @@ function calculateStats(rows: AppearanceRow[]): Player[] {
     const k       = appearances.filter(r => r.Appearance === 'K').length;
     const sb      = appearances.reduce((s, r) => s + (Number(r.SB)  || 0), 0);
 
-    if (ab < 5) continue;
+    if (ab < 2) continue;
 
     const totalBases = singles + doubles * 2 + triples * 3 + hr * 4;
     const avg   = ab > 0 ? round3(h / ab)         : 0;
