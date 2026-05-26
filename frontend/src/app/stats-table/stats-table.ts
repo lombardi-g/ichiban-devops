@@ -281,11 +281,11 @@ export class StatsTable implements OnInit {
 
   statColor(key: SortKey, value: number): string {
     const thresholds: Partial<Record<SortKey, { great: number; good: number; invert?: boolean }>> = {
-      avg:  { great: 0.500, good: 0.350 },
-      obp:  { great: 0.600, good: 0.450 },
-      slg:  { great: 0.800, good: 0.550 },
-      ops:  { great: 1.200, good: 0.900 },
-      kpct: { great: 0.150, good: 0.250, invert: true }, // lower is better
+      avg:  { great: 0.400, good: 0.280 },
+      obp:  { great: 0.600, good: 0.350 },
+      slg:  { great: 0.700, good: 0.450 },
+      ops:  { great: 1.000, good: 0.700 },
+      kpct: { great: 0.100, good: 0.200, invert: true }, // lower is better
     };
     const t = thresholds[key];
     if (!t) return '';
