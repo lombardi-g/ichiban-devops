@@ -30,10 +30,9 @@
 .wrapper {
   font-family: var(--font-mono);
   background: var(--burgundy-900);
-  min-height: 100vh;
+  min-height: 100vh;   
   color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
+  display: block; 
 }
 
 /* ── Header ────────────────────────────────────────────────── */
@@ -289,7 +288,9 @@
 /* ── Table scroll wrapper ──────────────────────────────────── */
 .table-scroll {
   overflow-x: auto;
-  flex: 1;
+  overflow-y: visible;
+  /* flex: 1; */
+  height: calc(100vh - 260px)
 }
 
 .table-scroll::-webkit-scrollbar {
@@ -328,6 +329,9 @@
   white-space: nowrap;
   transition: color 0.15s;
   background: var(--burgundy-800);
+  position: sticky;  
+  top: 0;             
+  z-index: 4;        
 }
 
 .stats-table th:first-child {
