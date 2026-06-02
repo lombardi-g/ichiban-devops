@@ -1,6 +1,6 @@
 import pandas as pd
 
-data = pd.read_csv("appearances.csv", sep=';',encoding='latin-1')
+data = pd.read_csv("frontend/public/appearances.csv", sep=';',encoding='latin-1')
 
 players = data["Name"].unique()
 
