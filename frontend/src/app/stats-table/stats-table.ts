@@ -40,7 +40,7 @@ interface AppearanceRow {
 
 // ── Stat calculation ──────────────────────────────────────────────────────────
 
-const COUNT_TOWARDS_AB = new Set(['1b', '2b', '3b', 'HR', 'K', 'ROE', 'RFC', 'GO', 'FO']);
+const COUNT_TOWARDS_AB = new Set(['1b', '2b', '3b', 'HR', 'K', 'ROE', 'RFC', 'GO', 'FO', 'BI']);
 const COUNT_AS_HIT     = new Set(['1b', '2b', '3b', 'HR']);
 const COUNT_ON_BASE    = new Set(['1b', '2b', '3b', 'HR', 'BB', 'HBP']);
 

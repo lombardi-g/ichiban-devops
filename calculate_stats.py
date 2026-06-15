@@ -4,7 +4,7 @@ data = pd.read_csv("frontend/public/appearances.csv", sep=';',encoding='latin-1'
 
 players = data["Name"].unique()
 
-count_towards_atbats = ["1b", "2b", "3b", "HR", "K", "ROE", "RFC", "GO", "FO"]
+count_towards_atbats = ["1b", "2b", "3b", "HR", "K", "ROE", "RFC", "GO", "FO", "BI"]
 count_as_hits = ["1b", "2b", "3b", "HR"]
 on_base = ["1b", "2b", "3b", "HR", "BB", "HBP"]
 
