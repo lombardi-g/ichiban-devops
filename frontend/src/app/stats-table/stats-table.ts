@@ -30,6 +30,7 @@ type SortDir = 'asc' | 'desc';
 // Raw row shape from the CSV
 interface AppearanceRow {
   Name:       string;
+  Date:       string;   // DD/MM/YYYY
   Appearance: string;
   League:     string;
   RBI:        number;
@@ -103,6 +104,7 @@ function parseCsv(text: string): AppearanceRow[] {
 
     rows.push({
       Name:       obj['Name'],
+      Date:       obj['Date'] ?? '',
       Appearance: obj['Appearance'],
       League:     obj['League'] ?? '',
       RBI:        Number(obj['RBI']) || 0,
@@ -143,12 +145,18 @@ export class StatsTable implements OnInit {
   sortDir            = signal<SortDir>('desc');
   rispOnly           = signal(false);
   selectedLeagues    = signal<Set<string>>(new Set());
+  selectedYears      = signal<Set<string>>(new Set());
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
   readonly allLeagues = computed(() => {
     const leagues = new Set(this.rawRows().map(r => r.League).filter(Boolean));
     return [...leagues].sort();
+  });
+
+  readonly allYears = computed(() => {
+    const years = new Set(this.rawRows().map(r => r.Date.split('/')[2]).filter(Boolean));
+    return [...years].sort();
   });
 
   private filteredRows = computed(() => {
@@ -159,6 +167,10 @@ export class StatsTable implements OnInit {
     const sel = this.selectedLeagues();
     if (sel.size > 0) {
       rows = rows.filter(r => sel.has(r.League));
+    }
+    const years = this.selectedYears();
+    if (years.size > 0) {
+      rows = rows.filter(r => years.has(r.Date.split('/')[2]));
     }
     return rows;
   });
@@ -267,6 +279,24 @@ export class StatsTable implements OnInit {
 
   clearLeagues(): void {
     this.selectedLeagues.set(new Set());
+  }
+
+  toggleYear(year: string): void {
+    const current = new Set(this.selectedYears());
+    if (current.has(year)) {
+      current.delete(year);
+    } else {
+      current.add(year);
+    }
+    this.selectedYears.set(current);
+  }
+
+  isYearSelected(year: string): boolean {
+    return this.selectedYears().has(year);
+  }
+
+  clearYears(): void {
+    this.selectedYears.set(new Set());
   }
 
   formatValue(player: Player, key: SortKey): string {

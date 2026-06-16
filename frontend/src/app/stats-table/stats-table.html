@@ -122,6 +122,26 @@
       </div>
     </div>
 
+    <!-- ── Year filter ────────────────────────────────────────── -->
+    <div class="championship-bar">
+      <span class="filter-label">Year</span>
+      <div class="champ-chips">
+        @for (year of allYears(); track year) {
+          <button
+            class="champ-chip"
+            [class.champ-chip-active]="isYearSelected(year)"
+            (click)="toggleYear(year)"
+          >
+            <span class="champ-check">{{ isYearSelected(year) ? '✓' : '' }}</span>
+            {{ year }}
+          </button>
+        }
+        @if (selectedYears().size > 0) {
+          <button class="champ-clear" (click)="clearYears()">✕ Clear</button>
+        }
+      </div>
+    </div>
+
     <!-- ── Table ────────────────────────────────────────────── -->
     <div class="table-scroll">
       <table class="stats-table">
