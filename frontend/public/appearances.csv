@@ -95,7 +95,6 @@ Ralph;30/06/2024;Blumenau;LCB-A;1b;1;0;0;0;true
 Panda;30/06/2024;Blumenau;LCB-A;ROE;0;0;0;0;false
 Panda;30/06/2024;Blumenau;LCB-A;BB;0;0;0;0;true
 Panda;30/06/2024;Blumenau;LCB-A;GO;0;0;0;0;true
-Antoni;30/06/2024;Blumenau;LCB-A;GO;0;0;0;0;false
 Marcio;30/06/2024;Blumenau;LCB-A;FO;0;0;0;0;true
 Marcio;30/06/2024;Blumenau;LCB-A;BB;0;0;0;0;false
 Marcio;30/06/2024;Blumenau;LCB-A;RFC;0;0;0;0;false
@@ -684,7 +683,7 @@ Jesus;14/06/2026;Kraken;Metropolitano;FO;0;0;0;0;true
 A. Flores;14/06/2026;Kraken;Metropolitano;FO;0;0;0;0;true
 Ralph;14/06/2026;Kraken;Metropolitano;FO;0;0;0;0;true
 Douglas;21/06/2026;Piratas;Metropolitano;1b;0;1;0;0;false
-Flores;21/06/2026;Piratas;Metropolitano;FO;0;0;0;0;false
+A. Flores;21/06/2026;Piratas;Metropolitano;FO;0;0;0;0;false
 Ralph;21/06/2026;Piratas;Metropolitano;3b;1;1;0;0;true
 Jose;21/06/2026;Piratas;Metropolitano;2b;1;0;0;1;true
 Adrian;21/06/2026;Piratas;Metropolitano;K;0;0;0;0;false
@@ -694,7 +693,7 @@ Jesus;21/06/2026;Piratas;Metropolitano;FO;0;0;0;0;true
 Neo;21/06/2026;Piratas;Metropolitano;1b;1;0;0;0;true
 Franklin;21/06/2026;Piratas;Metropolitano;1b;0;0;0;0;false
 Douglas;21/06/2026;Piratas;Metropolitano;BB;0;0;0;0;false
-Flores;21/06/2026;Piratas;Metropolitano;RFC;0;0;0;0;true
+A. Flores;21/06/2026;Piratas;Metropolitano;RFC;0;0;0;0;true
 Ralph;21/06/2026;Piratas;Metropolitano;FO;0;0;0;0;false
 Jose;21/06/2026;Piratas;Metropolitano;GO;0;0;0;0;false
 Adrian;21/06/2026;Piratas;Metropolitano;FO;0;0;0;0;false
