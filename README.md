@@ -4,23 +4,19 @@
 
 A batting statistics dashboard for an amateur baseball team. The app reads a CSV file of plate appearances and calculates MLB-standard metrics — AVG, OBP, SLG, OPS.
 
-The frontend is Angular 21 with a sortable, filterable table, color-coded rate stats, team summary cards, and a loading state that fetches the CSV at runtime — so updating stats for a new game requires only updating one file.
-
-That is the entire application. What makes this a DevOps project is everything wrapped around it.
-
 ---
 
 ## Technology Stack
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| Frontend | Angular 21 (standalone, signals, zoneless) | Stats dashboard UI |
-| Data | Python + pandas | Stat calculation and CSV validation |
-| Containerisation | Docker + Nginx | Portable, reproducible app packaging |
-| Orchestration | Kubernetes + minikube | Local container management and scaling demo |
-| CI/CD | GitHub Actions | Automated validation, build, and deployment |
-| Hosting | GitHub Pages | Free static site hosting |
-| Version control | Git + GitHub | Source of truth for all code and config |
+| Frontend | [![Angular](https://img.shields.io/badge/Angular-%23DD0031.svg?logo=angular&logoColor=white)](#) | Stats dashboard UI |
+| Data | [![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=fff)](#) / [![Pandas](https://img.shields.io/badge/Pandas-150458?logo=pandas&logoColor=fff)](#) | Stat calculation and CSV validation |
+| Containerisation | [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=fff)](#) / [![nginx](https://img.shields.io/badge/nginx-009639?logo=nginx&logoColor=fff)](#) | Portable, reproducible app packaging |
+| Orchestration | [![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=fff)](#) | Local container management and scaling demo |
+| CI/CD | [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?logo=github-actions&logoColor=white)](#) | Automated validation, build, and deployment |
+| Hosting | [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-121013?logo=github&logoColor=white)](#) | Free static site hosting |
+| Version control | [![Git](https://img.shields.io/badge/Git-F05032?logo=git&logoColor=fff)](#) / [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](#) | Source of truth for all code and config |
 
 ---
 
